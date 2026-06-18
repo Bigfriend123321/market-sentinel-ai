@@ -1,0 +1,98 @@
+# =====================================================================
+# Market Sentinel AI — Fichier de configuration principal
+# =====================================================================
+# Toutes les valeurs ci-dessous sont lues par src/market_sentinel/config.py
+# et peuvent être modifiées sans toucher au code.
+
+app:
+  name: "Market Sentinel AI"
+  # Intervalle entre deux cycles complets d'analyse (en secondes).
+  # 900 = 15 minutes. Augmentez la valeur pour réduire la charge réseau.
+  refresh_interval_seconds: 900
+  timezone: "Europe/Brussels"
+
+universe:
+  # "auto"  : l'app SCANNE le marché et choisit elle-même les valeurs.
+  # "watchlist" : on n'utilise que la liste fixe de config/watchlist.yaml.
+  mode: "auto"
+  # Screeners Yahoo interrogés en mode auto (marché américain).
+  screens:
+    - most_actives                # les plus échangées
+    - day_gainers                 # plus fortes hausses du jour
+    - undervalued_growth_stocks   # croissance sous-évaluée
+    - growth_technology_stocks    # techno en croissance
+    - aggressive_small_caps       # petites capis dynamiques
+  count_per_screen: 30            # nombre de valeurs ramenées par screener
+  max_symbols: 60                 # plafond total de valeurs analysées par cycle
+  # false = l'app choisit PUREMENT d'après le marché (recommandé).
+  # true  = on ajoute aussi tes favoris de watchlist.yaml en complément.
+  include_watchlist: false        # watchlist.yaml reste utilisée pour l'IA + le repli
+
+data:
+  # Période et granularité de l'historique téléchargé pour l'analyse technique.
+  default_period: "1y"         # 1d,5d,1mo,3mo,6mo,1y,2y,5y,max
+  default_interval: "1d"       # 1m,5m,15m,1h,1d,1wk,1mo
+  # Seuil de variation de prix (%) déclenchant une alerte "mouvement important".
+  price_move_alert_pct: 5.0
+  # Un volume >= ce facteur x la moyenne récente est considéré comme un pic.
+  volume_spike_factor: 2.0
+  # Nombre d'analyses en parallèle (accélère beaucoup avec une grosse watchlist).
+  max_workers: 8
+
+scoring:
+  # Poids relatifs de chaque critère dans le score global /100.
+  # Les composantes manquantes sont ignorées et les poids renormalisés.
+  weights:
+    revenue_growth: 0.15
+    profit_margin: 0.15
+    pe_ratio: 0.12
+    ps_ratio: 0.08
+    debt_to_equity: 0.12
+    free_cash_flow: 0.13
+    eps: 0.10
+    market_cap: 0.05
+    technical: 0.10
+
+ai:
+  # IA locale (scikit-learn, Gradient Boosting). Si un modèle entraîné existe
+  # et que use_ml_model = true, sa probabilité de hausse est intégrée aux
+  # scénarios. Sinon, repli automatique sur le moteur heuristique.
+  use_ml_model: true
+  model_path: "data/predictor.joblib"
+  # Indice de référence pour le "régime de marché" suivi par l'IA.
+  market_index: "^GSPC"        # S&P 500 (^IXIC = Nasdaq, ^STOXX50E = Euro Stoxx 50)
+  # --- Détecteur de "mines d'or" (multi-horizons) ---
+  explosive_horizons: [63, 126, 252]  # ~3, 6, 12 mois de bourse
+  explosive_top_quantile: 0.20        # "gagnante" = top 20% combiné du marché
+  train_on_universe: true             # entraîner sur l'univers scanné (sinon watchlist.yaml)
+  # --- Paramètres d'entraînement ---
+  history_period: "max"        # profondeur d'historique : 5y, 10y, max
+  max_iter: 600                # nombre max d'itérations (arrêt auto si plus d'amélioration)
+  test_fraction: 0.2           # part la PLUS RÉCENTE réservée à la validation honnête
+
+screener:
+  # Onglet "Pépites" : sociétés connues à prix d'action faible et fort potentiel.
+  max_share_price: 60.0        # prix maximum d'une action (devise locale) pour être une "pépite"
+  min_score: 60.0              # score global minimum
+
+news:
+  # "yfinance" (gratuit, sans clé), "newsapi" (clé requise) ou "finbert" (NLP local).
+  provider: "yfinance"
+  newsapi_key: ""              # à remplir si provider = newsapi
+  max_articles: 20
+
+alerts:
+  # Une analyse déclenche une alerte "opportunité" si score >= min_score
+  # ET confiance du scénario >= min_confidence.
+  min_score: 75
+  min_confidence: 0.70
+  enable_desktop_notifications: true
+
+storage:
+  database_path: "data/market_sentinel.db"
+
+logging:
+  level: "INFO"                # DEBUG, INFO, WARNING, ERROR
+  file: "logs/market_sentinel.log"
+  max_bytes: 5242880           # 5 Mo par fichier de log
+  backup_count: 5

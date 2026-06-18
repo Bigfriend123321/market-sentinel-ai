@@ -1,0 +1,25 @@
+# Environnements virtuels
+.venv/
+venv/
+env/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Données générées à l'exécution
+logs/
+data/*.db
+data/*.joblib
+# ... mais on GARDE le modèle IA entraîné (nécessaire au déploiement cloud)
+!data/predictor.joblib
+
+# Config locale sensible (clés API)
+config/secrets.yaml
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

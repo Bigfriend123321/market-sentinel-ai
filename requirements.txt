@@ -1,0 +1,11 @@
+# Market Sentinel AI — dépendances principales (cœur fonctionnel)
+# Installer avec :  pip install -r requirements.txt
+pandas>=2.0
+numpy>=1.24
+requests>=2.31
+yfinance>=0.2.40
+plotly>=5.18
+streamlit>=1.30
+scikit-learn>=1.3
+PyYAML>=6.0
+plyer>=2.1

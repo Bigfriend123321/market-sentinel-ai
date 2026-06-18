@@ -1,0 +1,73 @@
+# Liste des valeurs surveillées (symboles boursiers / tickers Yahoo Finance).
+# Suffixes pour les bourses hors USA :
+#   .PA = Paris   .AS = Amsterdam   .BR = Bruxelles   .L = Londres
+#   .DE = Francfort   .MI = Milan   .MC = Madrid   .SW = Suisse
+#
+# Astuce : tu peux ajouter/retirer librement des lignes. Plus il y a de
+# valeurs, plus un cycle d'analyse est long (l'analyse est parallélisée).
+tickers:
+  # --- Méga-capitalisations technologiques (USA) ---
+  - AAPL      # Apple
+  - MSFT      # Microsoft
+  - NVDA      # NVIDIA
+  - GOOGL     # Alphabet
+  - AMZN      # Amazon
+  - META      # Meta Platforms
+  - TSLA      # Tesla
+  - AVGO      # Broadcom
+  - ORCL      # Oracle
+  - CRM       # Salesforce
+  - ADBE      # Adobe
+  - AMD       # AMD
+  - NFLX      # Netflix
+
+  # --- Semi-conducteurs / IA ---
+  - TSM       # TSMC
+  - MU        # Micron
+  - QCOM      # Qualcomm
+  - ARM       # Arm Holdings
+  - SMCI      # Super Micro Computer
+
+  # --- Valeurs « value » / dividendes connues ---
+  - JPM       # JPMorgan
+  - V         # Visa
+  - JNJ       # Johnson & Johnson
+  - WMT       # Walmart
+  - KO        # Coca-Cola
+  - PEP       # PepsiCo
+  - MCD       # McDonald's
+  - DIS       # Disney
+  - BA        # Boeing
+  - XOM       # ExxonMobil
+
+  # --- Sociétés TRÈS CONNUES à PRIX D'ACTION FAIBLE (potentiel élevé) ---
+  # (idéales pour l'onglet « Pépites » : nom connu + action peu chère)
+  - F         # Ford
+  - INTC      # Intel
+  - PLTR      # Palantir
+  - SOFI      # SoFi
+  - NIO       # NIO (VE chinois)
+  - SNAP      # Snapchat
+  - HOOD      # Robinhood
+  - UBER      # Uber
+  - PFE       # Pfizer
+  - T         # AT&T
+  - NOK       # Nokia
+  - VALE      # Vale
+  - PBR       # Petrobras
+  - NU        # Nubank
+  - RIVN      # Rivian
+  - LCID      # Lucid
+  - CCL       # Carnival
+  - AAL       # American Airlines
+  - WBD       # Warner Bros. Discovery
+  - GRAB      # Grab Holdings
+
+  # --- Europe (valeurs connues) ---
+  - ASML.AS   # ASML (Amsterdam)
+  - MC.PA     # LVMH (Paris)
+  - AIR.PA    # Airbus (Paris)
+  - OR.PA     # L'Oréal (Paris)
+  - SAP.DE    # SAP (Francfort)
+  - SHEL.L    # Shell (Londres)
+  - HSBA.L    # HSBC (Londres)

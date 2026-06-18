@@ -1,0 +1,15 @@
+# Market Sentinel AI — dépendances OPTIONNELLES (fonctionnalités avancées)
+# Le programme fonctionne sans ces paquets (modes de repli automatiques).
+#
+#   pip install -r requirements-optional.txt
+#
+# transformers + torch : analyse de sentiment financière par FinBERT
+#   (sinon : analyse lexicale légère intégrée, sans dépendance lourde)
+transformers>=4.38
+torch>=2.1
+# feedparser : lecture de flux RSS (Reuters, etc.) en complément de yfinance
+feedparser>=6.0
+# newsapi-python : connecteur NewsAPI (clé gratuite requise)
+newsapi-python>=0.2.7
+# joblib : sauvegarde/chargement du modèle ML scikit-learn (souvent déjà tiré par scikit-learn)
+joblib>=1.3

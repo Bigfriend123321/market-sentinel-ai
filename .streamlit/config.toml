@@ -1,0 +1,15 @@
+# Configuration du tableau de bord Streamlit (compatible local ET cloud).
+# NOTE : pas de section [server] avec address/port/headless -> indispensable
+# pour que l'hébergement cloud (Streamlit Community Cloud) fonctionne.
+# En local, le navigateur s'ouvre automatiquement et l'app est aussi
+# accessible sur le réseau Wi-Fi (un clic « Autoriser » au pare-feu la 1re fois).
+[browser]
+gatherUsageStats = false   # pas de collecte de statistiques / pas d'invite e-mail
+
+[theme]
+base = "dark"
+primaryColor = "#3B82F6"             # bleu (accent)
+backgroundColor = "#0A0F1C"          # fond principal
+secondaryBackgroundColor = "#131D31" # cartes / panneaux
+textColor = "#F3F4F6"
+font = "sans serif"
