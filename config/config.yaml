@@ -15,15 +15,20 @@ universe:
   # "auto"  : l'app SCANNE le marché et choisit elle-même les valeurs.
   # "watchlist" : on n'utilise que la liste fixe de config/watchlist.yaml.
   mode: "auto"
-  # Screeners Yahoo interrogés en mode auto (marché américain).
+  # Screeners Yahoo interrogés en mode auto. Ordre = priorité de DÉCOUVERTE :
+  # les valeurs moins connues (petites/moyennes, sous-évaluées) passent en
+  # premier pour ne pas être noyées par les géants très liquides.
   screens:
-    - most_actives                # les plus échangées
     - day_gainers                 # plus fortes hausses du jour
-    - undervalued_growth_stocks   # croissance sous-évaluée
-    - growth_technology_stocks    # techno en croissance
+    - small_cap_gainers           # petites capis en hausse (découverte)
     - aggressive_small_caps       # petites capis dynamiques
-  count_per_screen: 30            # nombre de valeurs ramenées par screener
-  max_symbols: 60                 # plafond total de valeurs analysées par cycle
+    - undervalued_growth_stocks   # croissance sous-évaluée
+    - undervalued_large_caps      # grandes capis sous-évaluées
+    - most_shorted_stocks         # très shortées (rebonds possibles)
+    - growth_technology_stocks    # techno en croissance
+    - most_actives                # les plus échangées
+  count_per_screen: 25            # nombre de valeurs ramenées par screener
+  max_symbols: 75                 # plafond total de valeurs analysées par cycle
   # false = l'app choisit PUREMENT d'après le marché (recommandé).
   # true  = on ajoute aussi tes favoris de watchlist.yaml en complément.
   include_watchlist: false        # watchlist.yaml reste utilisée pour l'IA + le repli

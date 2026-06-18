@@ -36,7 +36,7 @@ from market_sentinel.analysis.opportunities import (  # noqa: E402
     analyze_ticker,
     analyze_watchlist,
 )
-from market_sentinel.analysis.screener import find_gems  # noqa: E402
+from market_sentinel.analysis.screener import find_gems, opportunity_index  # noqa: E402
 from market_sentinel.config import load_config  # noqa: E402
 from market_sentinel.data.market_data import get_history  # noqa: E402
 from market_sentinel.news.fetcher import fetch_news  # noqa: E402
@@ -372,10 +372,16 @@ st.markdown(
 #  PAGE : TOP opportunités
 # ==========================================================================
 if page == PAGES[0]:
-    section("🏆 TOP opportunités du jour", "Les meilleures valeurs détectées sur le marché scanné.")
-    col_a, col_b = st.columns([1, 4])
-    limit = col_a.slider("Nombre", 3, 25, 10)
-    if col_b.button("🔄 Lancer / actualiser l'analyse", type="primary"):
+    section("🏆 Opportunités détectées par l'IA",
+            "L'IA scanne le marché en direct et sélectionne elle-même les valeurs — aucune liste figée.")
+    c1, c2, c3 = st.columns([1, 1.6, 1.4])
+    limit = c1.slider("Nombre", 3, 30, 12)
+    crit = c2.selectbox(
+        "Classer par",
+        ["Potentiel IA (mine d'or)", "Mixte (IA + fondamental)", "Score fondamental"],
+        index=0,
+    )
+    if c3.button("🔄 Re-scanner le marché", type="primary"):
         cached_watchlist.clear()
 
     with st.spinner("Scan du marché et analyse en cours (en parallèle)…"):
@@ -384,7 +390,17 @@ if page == PAGES[0]:
     if not alla:
         st.info("Aucune donnée. Vérifie ta connexion internet.")
     else:
-        top = alla[:limit]
+        def _rank_key(a: dict):
+            if crit.startswith("Potentiel IA"):
+                return a.get("ai_up_proba") if a.get("ai_up_proba") is not None else -1.0
+            if crit.startswith("Score"):
+                return a["score"]["global_score"]
+            return opportunity_index(a)
+
+        ranked = sorted(alla, key=_rank_key, reverse=True)
+        top = ranked[:limit]
+        st.caption(f"🔎 L'IA a scanné **{len(alla)} valeurs** du marché en direct et "
+                   f"retenu les meilleures ci-dessous (tri : {crit.lower()}).")
         rows = [
             {
                 "Entreprise": a["name"],
