@@ -54,8 +54,13 @@ class Analysis:
     ai_up_proba: Optional[float] = None      # probabilité de hausse de l'IA locale
 
 
-def analyze_ticker(ticker: str, cfg) -> Analysis:
-    """Analyse de bout en bout d'une seule valeur."""
+def analyze_ticker(ticker: str, cfg, market_trend: Optional[float] = None) -> Analysis:
+    """Analyse de bout en bout d'une seule valeur.
+
+    `market_trend` peut être fourni par l'appelant (calculé une seule fois par
+    cycle dans `analyze_watchlist`) pour éviter de recharger l'indice de
+    référence à chaque valeur.
+    """
     log.info("Analyse de %s", ticker)
 
     fundamentals = get_fundamentals(ticker)
@@ -84,8 +89,12 @@ def analyze_ticker(ticker: str, cfg) -> Analysis:
             except Exception as exc:  # noqa: BLE001
                 log.debug("IA indisponible pour %s : %s", ticker, exc)
 
-    # Régime de marché global (suivi du marché)
-    market = market_trend_score(cfg.get("ai.market_index", "^GSPC"))
+    # Régime de marché global (fourni par le cycle, sinon calculé à la volée).
+    market = (
+        market_trend
+        if market_trend is not None
+        else market_trend_score(cfg.get("ai.market_index", "^GSPC"))
+    )
 
     scenario = predict_scenarios(
         score.global_score, technical.score, sentiment, technical.volatility,
@@ -129,10 +138,12 @@ def analyze_watchlist(cfg, max_workers: Optional[int] = None) -> List[Analysis]:
         max_workers = int(cfg.get("data.max_workers", 8))
     tickers = get_universe(cfg)
     log.info("Univers d'analyse : %d valeurs", len(tickers))
+    # Régime de marché calculé UNE seule fois pour tout le cycle.
+    market = market_trend_score(cfg.get("ai.market_index", "^GSPC"))
     results: List[Analysis] = []
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        futures = {pool.submit(analyze_ticker, t, cfg): t for t in tickers}
+        futures = {pool.submit(analyze_ticker, t, cfg, market): t for t in tickers}
         for future in as_completed(futures):
             ticker = futures[future]
             try:

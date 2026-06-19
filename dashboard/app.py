@@ -36,6 +36,7 @@ from market_sentinel.analysis.opportunities import (  # noqa: E402
     analyze_ticker,
     analyze_watchlist,
 )
+from market_sentinel.analysis.backtest import run_backtest  # noqa: E402
 from market_sentinel.analysis.screener import find_gems, opportunity_index  # noqa: E402
 from market_sentinel.config import load_config  # noqa: E402
 from market_sentinel.data.market_data import get_history  # noqa: E402
@@ -115,6 +116,18 @@ def cached_universe_size():
     from market_sentinel.analysis.universe import get_universe
 
     return len(get_universe(cfg))
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def cached_backtest(top_n: int, period: str):
+    res = run_backtest(cfg.watchlist, period=period, top_n=top_n)
+    return {
+        "equity": res.equity,
+        "benchmark": res.benchmark,
+        "metrics": res.metrics,
+        "benchmark_metrics": res.benchmark_metrics,
+        "n_tickers": res.n_tickers,
+    }
 
 
 def fmt_price(value, currency=""):
@@ -321,6 +334,7 @@ PAGES = [
     "🔔  Alertes",
     "💼  Portefeuille",
     "🕓  Historique",
+    "📈  Backtest",
 ]
 with st.sidebar:
     st.markdown(
@@ -666,3 +680,55 @@ elif page == PAGES[6]:
         st.dataframe(df, width="stretch", hide_index=True)
     else:
         st.info("Aucune analyse enregistrée. Lance une analyse depuis la page Opportunités.")
+
+
+# ==========================================================================
+#  PAGE : Backtest
+# ==========================================================================
+elif page == PAGES[7]:
+    section("📈 Backtest de la stratégie",
+            "Validation honnête sur l'historique — momentum + tendance, point-in-time.")
+    st.markdown(
+        '<div class="ms-note">⚠️ On backteste la stratégie <b>prix/tendance</b> '
+        "(reconstituable dans le passé), <b>PAS</b> le score fondamental (yfinance n'a pas "
+        "de fondamentaux historiques → ce serait une fuite de données). Univers = watchlist, "
+        "biais du survivant assumé. Le passé ne préjuge pas du futur.</div>",
+        unsafe_allow_html=True,
+    )
+    cc1, cc2, cc3 = st.columns([1, 1, 1.4])
+    bt_n = cc1.slider("Taille du TOP", 3, 20, 10)
+    bt_period = cc2.selectbox("Période", ["2y", "5y", "10y", "max"], index=1)
+    launch = cc3.button("🚀 Lancer le backtest", type="primary")
+
+    if launch:
+        with st.spinner("Backtest en cours (téléchargement de l'historique)…"):
+            try:
+                res = cached_backtest(bt_n, bt_period)
+            except Exception as exc:  # noqa: BLE001
+                st.error(f"Backtest impossible : {exc}")
+                res = None
+        if res:
+            m, bm = res["metrics"], res["benchmark_metrics"]
+            x1, x2, x3, x4 = st.columns(4)
+            x1.metric("Rendement annualisé", f"{m.get('cagr', 0) * 100:.1f}%",
+                      f"{(m.get('cagr', 0) - bm.get('cagr', 0)) * 100:+.1f} pts vs S&P 500")
+            x2.metric("Ratio de Sharpe", f"{m.get('sharpe', 0):.2f}")
+            x3.metric("Perte max (drawdown)", f"{m.get('max_drawdown', 0) * 100:.1f}%")
+            x4.metric("Mois battant le S&P 500", f"{m.get('beat_benchmark', 0) * 100:.0f}%")
+
+            eq, beq = res["equity"], res["benchmark"]
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=eq.index, y=eq.values, name="Stratégie",
+                                     line=dict(color=BLUE3, width=2.4, shape="spline")))
+            fig.add_trace(go.Scatter(x=beq.index, y=beq.values, name="S&P 500",
+                                     line=dict(color=T3, width=1.6, shape="spline")))
+            fig.update_layout(title="Courbe d'équité (base 1.0)", height=430)
+            plot(fig)
+            st.caption(
+                f"Stratégie : CAGR {m.get('cagr', 0) * 100:.1f}% · Sharpe {m.get('sharpe', 0):.2f} · "
+                f"hit-rate {m.get('hit_rate', 0) * 100:.0f}% sur {m.get('months', 0)} mois "
+                f"({res['n_tickers']} valeurs). "
+                f"S&P 500 : CAGR {bm.get('cagr', 0) * 100:.1f}% · Sharpe {bm.get('sharpe', 0):.2f}."
+            )
+    else:
+        st.info("Choisis les paramètres puis clique sur « Lancer le backtest ».")

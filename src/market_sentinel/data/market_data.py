@@ -12,6 +12,7 @@ réimplémentées sur un autre fournisseur sans toucher au reste du code.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
@@ -82,13 +83,27 @@ def get_quote(ticker: str) -> Quote:
     )
 
 
-def get_history(ticker: str, period: str = "6mo", interval: str = "1d") -> pd.DataFrame:
-    """Télécharge l'historique OHLCV. Retourne un DataFrame (vide si échec)."""
-    try:
-        return yf.Ticker(ticker).history(period=period, interval=interval)
-    except Exception as exc:  # noqa: BLE001
-        log.warning("history() a échoué pour %s : %s", ticker, exc)
-        return pd.DataFrame()
+def get_history(
+    ticker: str, period: str = "6mo", interval: str = "1d", attempts: int = 3
+) -> pd.DataFrame:
+    """Télécharge l'historique OHLCV avec retry + backoff exponentiel.
+
+    Yahoo peut limiter le débit (rate-limit) : on réessaie quelques fois en
+    espaçant les tentatives (0.5s, 1s, 2s…) avant d'abandonner proprement.
+    Retourne un DataFrame vide en cas d'échec définitif.
+    """
+    last_exc: Optional[Exception] = None
+    for attempt in range(attempts):
+        try:
+            df = yf.Ticker(ticker).history(period=period, interval=interval)
+            if not df.empty:
+                return df
+        except Exception as exc:  # noqa: BLE001 - réseau : on retente
+            last_exc = exc
+        time.sleep(0.5 * (2 ** attempt))  # 0.5s, 1s, 2s
+    if last_exc is not None:
+        log.warning("history() a échoué pour %s : %s", ticker, last_exc)
+    return pd.DataFrame()
 
 
 def detect_price_move(quote: Quote, threshold_pct: float) -> bool:
