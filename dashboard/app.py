@@ -47,7 +47,7 @@ st.set_page_config(
     page_title="Market Sentinel AI",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",  # déplié sur mobile (hamburger), ouvert sur desktop
 )
 
 cfg = load_config()
@@ -236,14 +236,17 @@ p, label, span, .stMarkdown{ color:var(--t2); }
 
 /* ---------- Metric cards (glass) ---------- */
 [data-testid="stMetric"]{
-  background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px 20px;
+  position:relative; overflow:hidden;
+  background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px 20px 18px 22px;
   backdrop-filter:blur(8px); box-shadow:0 6px 22px rgba(0,0,0,0.28);
   transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
-[data-testid="stMetric"]:hover{ transform:translateY(-3px); border-color:rgba(59,130,246,0.45);
-  box-shadow:0 14px 32px rgba(37,99,235,0.22); }
-[data-testid="stMetricLabel"] p{ color:var(--t3); font-weight:500; }
-[data-testid="stMetricValue"]{ color:var(--t1); font-weight:700; }
+[data-testid="stMetric"]::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:linear-gradient(180deg,var(--blue2),var(--blue3)); opacity:.9; }
+[data-testid="stMetric"]:hover{ transform:translateY(-4px); border-color:rgba(59,130,246,0.50);
+  box-shadow:0 16px 36px rgba(37,99,235,0.25); }
+[data-testid="stMetricLabel"] p{ color:var(--t3); font-weight:500; letter-spacing:.01em; }
+[data-testid="stMetricValue"]{ color:var(--t1); font-weight:800; font-size:1.7rem; }
 
 /* ---------- Sidebar ---------- */
 [data-testid="stSidebar"]{
@@ -259,8 +262,13 @@ p, label, span, .stMarkdown{ color:var(--t2); }
   box-shadow:0 0 18px rgba(37,99,235,0.16); transform:translateX(3px);
 }
 [data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked){
-  background:linear-gradient(135deg, rgba(37,99,235,0.32), rgba(59,130,246,0.15));
-  border-color:rgba(96,165,250,0.5); color:var(--t1); box-shadow:0 6px 20px rgba(37,99,235,0.30);
+  background:linear-gradient(135deg, rgba(37,99,235,0.34), rgba(59,130,246,0.16));
+  border-color:rgba(96,165,250,0.55); color:var(--t1); font-weight:600;
+  box-shadow:0 6px 20px rgba(37,99,235,0.30); position:relative;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked)::before{
+  content:""; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:3px;
+  background:var(--blue3);
 }
 [data-testid="stSidebar"] [role="radiogroup"] label > div:first-child{ display:none; }
 .ms-side-brand{ display:flex; align-items:center; gap:10px; font-weight:800; color:var(--t1);
@@ -308,10 +316,25 @@ p, label, span, .stMarkdown{ color:var(--t2); }
 ::-webkit-scrollbar-thumb{ background:rgba(96,165,250,0.25); border-radius:10px; }
 ::-webkit-scrollbar-thumb:hover{ background:rgba(96,165,250,0.45); }
 
-/* ---------- Responsive ---------- */
-@media (max-width:680px){
-  .ms-topbar{ flex-direction:column; align-items:flex-start; gap:10px; }
-  .block-container{ padding-left:.7rem; padding-right:.7rem; }
+/* ---------- Divers ---------- */
+html{ scroll-behavior:smooth; }
+hr{ border-color:var(--border); }
+
+/* ---------- Responsive / MOBILE (accès total sur petit écran) ---------- */
+@media (max-width: 820px){
+  /* Empile TOUTES les rangées de colonnes (KPI, contrôles, formulaires, graphes) */
+  div[data-testid="stHorizontalBlock"]{ flex-direction:column !important; gap:10px !important; }
+  div[data-testid="stHorizontalBlock"] > div{ width:100% !important; flex:1 1 100% !important; }
+  .stButton > button{ width:100%; }
+  .ms-topbar{ flex-direction:column; align-items:flex-start; gap:10px; padding:12px 16px; }
+  .ms-actions{ width:100%; flex-wrap:wrap; }
+  .block-container{ padding-left:.7rem; padding-right:.7rem; padding-top:1rem; }
+  .ms-section{ font-size:1.08rem; }
+}
+@media (max-width: 480px){
+  .ms-brand{ font-size:1rem; }
+  [data-testid="stMetricValue"]{ font-size:1.35rem !important; }
+  .ms-pill{ font-size:0.76rem; padding:7px 11px; }
 }
 </style>
 """
